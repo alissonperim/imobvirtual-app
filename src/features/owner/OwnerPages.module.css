@@ -1,0 +1,75 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.kpiCard {
+  gap: 8px;
+  padding: 18px;
+}
+
+.kpiValue {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 26px;
+}
+
+.splitGrid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+
+.propGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.contractsGrid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .kpiGrid { grid-template-columns: repeat(2, 1fr); }
+  .splitGrid { grid-template-columns: 1fr; }
+  .propGrid { grid-template-columns: repeat(2, 1fr); }
+  .contractsGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .kpiGrid { grid-template-columns: 1fr; }
+  .propGrid { grid-template-columns: 1fr; }
+  .headerActions { width: 100%; }
+}
+
+.tableCard {
+  padding: 20px 20px 8px;
+  gap: 6px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}

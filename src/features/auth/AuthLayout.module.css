@@ -1,0 +1,68 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  background: var(--color-bg);
+}
+
+.brandPanel {
+  flex: 1 1 46%;
+  max-width: 560px;
+  background: linear-gradient(160deg, #0d1b2e 0%, #1c2f49 100%);
+  color: #ffffff;
+  padding: 56px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.brandHeadline {
+  color: #ffffff;
+  font-size: clamp(28px, 3vw, 34px);
+  margin: 0 0 14px;
+  line-height: 1.15;
+  max-width: 420px;
+}
+
+.brandSub {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14.5px;
+  margin: 0;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.brandFoot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.formPanel {
+  flex: 1 1 54%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  overflow-y: auto;
+}
+
+.formInner {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 0;
+}
+
+.formInnerWide {
+  max-width: 560px;
+}
+
+.mobileLogo {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .brandPanel { display: none; }
+  .mobileLogo { display: flex; margin-bottom: 28px; }
+}
