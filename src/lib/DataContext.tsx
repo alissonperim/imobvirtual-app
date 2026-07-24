@@ -1,10 +1,24 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ALERTAS, CHAMADOS, CONTRATOS, COBRANCAS, IMOVEIS, INQUILINOS_NOMES } from './mockData';
+import { useAuth } from './AuthContext';
 import type {
   Alerta, Chamado, ChamadoCategoria, ChamadoUrgencia, Contrato, Cobranca, Imovel, MetodoPagamento,
 } from './types';
 
 const STORAGE_KEY = 'imobvirtual:data:v1';
+
+const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+function competenciaAtual(): string {
+  const d = new Date();
+  return `${MESES[d.getMonth()]}/${d.getFullYear()}`;
+}
+
+function dataBRDaquiA(dias: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
 
 interface DataState {
   imoveis: Imovel[];
@@ -49,8 +63,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   const inquilinoNome = useCallback(
-    (id: string | null) => (id ? INQUILINOS_NOMES[id] ?? id : '—'),
-    [],
+    (id: string | null) => {
+      if (!id) return '—';
+      const contrato = state.contratos.find((c) => c.inquilinoId === id);
+      return contrato?.inquilinoNome ?? INQUILINOS_NOMES[id] ?? id;
+    },
+    [state.contratos],
   );
 
   const imovelById = useCallback((id: string) => state.imoveis.find((i) => i.id === id), [state.imoveis]);
@@ -88,9 +106,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signContrato = useCallback((id: string) => {
-    setState((prev) => ({
-      ...prev,
-      contratos: prev.contratos.map((c) =>
+    setState((prev) => {
+      const contrato = prev.contratos.find((c) => c.id === id);
+      if (!contrato) return prev;
+
+      const contratos = prev.contratos.map((c) =>
         c.id === id
           ? {
               ...c,
@@ -101,8 +121,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
               ),
             }
           : c,
-      ),
-    }));
+      );
+
+      const imoveis = prev.imoveis.map((i) =>
+        i.id === contrato.imovelId && i.status === 'vago' ? { ...i, status: 'ocupado' as const } : i,
+      );
+
+      const jaTemCobranca = contrato.inquilinoId
+        ? prev.cobrancas.some((cb) => cb.inquilinoId === contrato.inquilinoId)
+        : true;
+      const cobrancas = jaTemCobranca
+        ? prev.cobrancas
+        : [
+            {
+              id: `cb-${contrato.imovelId}-${Date.now()}`,
+              imovelId: contrato.imovelId,
+              inquilinoId: contrato.inquilinoId!,
+              inquilinoNome: contrato.inquilinoNome,
+              competencia: competenciaAtual(),
+              vencimento: dataBRDaquiA(7),
+              valor: contrato.valor,
+              metodo: null,
+              status: 'pendente' as const,
+              diasParaVencer: 7,
+            },
+            ...prev.cobrancas,
+          ];
+
+      return { ...prev, contratos, imoveis, cobrancas };
+    });
   }, []);
 
   const addChamado = useCallback(
@@ -119,6 +166,70 @@ export function DataProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+
+  // Recém-cadastrados não vêm com nada no dataset demo (id gerado na hora). Assim que um
+  // inquilino sem contrato aparece, ele "assume" a unidade de exemplo que já existe pronta
+  // para isso (contrato aguardando assinatura, sem inquilino vinculado); se essa unidade já
+  // tiver sido reclamada por outro cadastro nesta mesma sessão, gera uma nova do zero.
+  const ensureTenantOnboarded = useCallback((user: { id: string; nome: string; sobrenome: string }) => {
+    setState((prev) => {
+      if (prev.contratos.some((c) => c.inquilinoId === user.id)) return prev;
+
+      const nomeCompleto = `${user.nome} ${user.sobrenome}`.trim();
+      const placeholder = prev.contratos.find((c) => c.status === 'aguardando_assinatura' && c.inquilinoId === null);
+
+      if (placeholder) {
+        return {
+          ...prev,
+          contratos: prev.contratos.map((c) =>
+            c.id === placeholder.id ? { ...c, inquilinoId: user.id, inquilinoNome: nomeCompleto } : c,
+          ),
+          imoveis: prev.imoveis.map((i) =>
+            i.id === placeholder.imovelId ? { ...i, inquilinoId: user.id } : i,
+          ),
+        };
+      }
+
+      const imovelId = `im-novo-${user.id}`;
+      const novoImovel: Imovel = {
+        id: imovelId,
+        endereco: 'Rua dos Ipês, 120',
+        bairro: 'Perdizes',
+        cidade: 'São Paulo, SP',
+        tipo: 'Apto · 1 quarto',
+        metragem: 45,
+        aluguel: 2400,
+        diaVencimento: 10,
+        inquilinoId: user.id,
+        status: 'vago',
+      };
+      const novoContrato: Contrato = {
+        id: `ct-novo-${user.id}`,
+        imovelId,
+        inquilinoNome: nomeCompleto,
+        inquilinoId: user.id,
+        valor: 2400,
+        status: 'aguardando_assinatura',
+        inicio: '—',
+        vigenciaMeses: 12,
+        indiceReajuste: 'IGP-M',
+        proximoReajuste: '—',
+        assinadoPeloInquilino: false,
+        eventos: [
+          { titulo: 'Contrato enviado', data: 'Aguardando assinatura', concluido: true },
+          { titulo: 'Assinatura do inquilino', data: 'Pendente', concluido: false },
+          { titulo: 'Contrato ativo', data: 'Pendente', concluido: false },
+        ],
+      };
+      return { ...prev, imoveis: [...prev.imoveis, novoImovel], contratos: [...prev.contratos, novoContrato] };
+    });
+  }, []);
+
+  const { currentUser } = useAuth();
+  useEffect(() => {
+    if (currentUser?.role === 'inquilino') ensureTenantOnboarded(currentUser);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
 
   const resetDemoData = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
