@@ -69,6 +69,9 @@ export interface Cobranca {
   diasEmAtraso?: number;
   diasParaVencer?: number;
   pagoEm?: string;
+  // Encargos repassados junto com o aluguel (condomínio, IPTU etc.) — "Aluguel" na
+  // fatura é a diferença entre `valor` e a soma destes. Sem isso, a fatura é só aluguel.
+  encargos?: { label: string; valor: number }[];
 }
 
 export type ChamadoCategoria = 'Hidráulica' | 'Elétrica' | 'Estrutura' | 'Outros';

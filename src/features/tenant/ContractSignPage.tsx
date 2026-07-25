@@ -7,6 +7,7 @@ import { useToast } from '../../lib/ToastContext';
 import { formatBRL } from '../../lib/format';
 import { ContratoStatusTag } from '../../components/StatusTag';
 import BackHeader from './BackHeader';
+import styles from './TenantPages.module.css';
 
 export default function ContractSignPage() {
   const { currentUser } = useAuth();
@@ -21,7 +22,7 @@ export default function ContractSignPage() {
 
   if (!contrato) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px' }}>
+      <div className={styles.narrowPage} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px' }}>
         <BackHeader title="Contrato" to="/app" />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10 }}>
           <FileSignature size={34} color="var(--color-neutral-400)" />
@@ -45,7 +46,7 @@ export default function ContractSignPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 14 }}>
+    <div className={styles.narrowPage} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 14 }}>
       <BackHeader title="Assinar contrato" to="/app" />
 
       {showForm ? (

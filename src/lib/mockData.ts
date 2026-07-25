@@ -242,6 +242,10 @@ export const COBRANCAS: Cobranca[] = [
     metodo: null,
     status: "pendente",
     diasParaVencer: 3,
+    encargos: [
+      { label: "Condomínio", valor: 180 },
+      { label: "IPTU", valor: 20 },
+    ],
   },
   {
     id: "cb-paulista-jun",

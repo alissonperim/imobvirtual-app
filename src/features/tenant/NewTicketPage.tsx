@@ -6,6 +6,7 @@ import { useData } from '../../lib/DataContext';
 import { useToast } from '../../lib/ToastContext';
 import SegmentedControl from '../../components/SegmentedControl';
 import BackHeader from './BackHeader';
+import styles from './TenantPages.module.css';
 import type { ChamadoCategoria, ChamadoUrgencia } from '../../lib/types';
 
 const CATEGORIAS: ChamadoCategoria[] = ['Hidráulica', 'Elétrica', 'Estrutura', 'Outros'];
@@ -27,7 +28,7 @@ export default function NewTicketPage() {
 
   if (!contrato) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px' }}>
+      <div className={styles.narrowPage} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px' }}>
         <BackHeader title="Abrir chamado" to="/app" />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 10 }}>
           <Wrench size={32} color="var(--color-neutral-400)" />
@@ -56,7 +57,7 @@ export default function NewTicketPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 14 }}>
+    <div className={styles.narrowPage} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 14 }}>
       <BackHeader title="Abrir chamado" to="/app/chamados" />
 
       <div className="field">

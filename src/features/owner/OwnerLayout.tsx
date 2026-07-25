@@ -7,7 +7,7 @@ import Logo from '../../components/Logo';
 import { useAuth } from '../../lib/AuthContext';
 import { useData } from '../../lib/DataContext';
 import { useToast } from '../../lib/ToastContext';
-import styles from './OwnerLayout.module.css';
+import styles from '../../styles/DashboardShell.module.css';
 
 const NAV_ITEMS = [
   { to: '/painel', label: 'Visão geral', icon: Home, end: true },

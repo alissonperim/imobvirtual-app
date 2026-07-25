@@ -164,3 +164,11 @@
   .content { padding: 18px 16px 48px; }
   .topbar { padding: 14px 16px; }
 }
+
+/* Tenant shell: no off-canvas — below the breakpoint the sidebar/topbar are
+   replaced entirely by BottomNav (already a proper mobile nav), not toggled. */
+@media (max-width: 860px) {
+  .sidebarTenant { display: none; }
+  .topbarTenant { display: none; }
+  .contentTenant { padding-bottom: 90px; }
+}

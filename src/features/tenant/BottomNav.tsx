@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { CreditCard, FileText, Home, User, Wrench } from 'lucide-react';
-import styles from './TenantLayout.module.css';
+import styles from './BottomNav.module.css';
 
 const ITEMS = [
   { to: '/app', label: 'Início', icon: Home, end: true },

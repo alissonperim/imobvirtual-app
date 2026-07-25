@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Mail, MessageCircle, Phone, Smartphone } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import BackHeader from './BackHeader';
+import styles from './TenantPages.module.css';
 
 const CHANNEL_LABEL: Record<string, string> = { sms: 'SMS', whatsapp: 'WhatsApp', email: 'E-mail' };
 
@@ -12,7 +13,7 @@ export default function ProfilePage() {
   if (!currentUser) return null;
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 16 }}>
+    <div className={styles.narrowPage} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 16 }}>
       <BackHeader title="Perfil" to="/app" />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

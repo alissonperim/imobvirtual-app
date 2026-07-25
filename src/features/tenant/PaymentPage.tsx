@@ -7,6 +7,7 @@ import { useToast } from '../../lib/ToastContext';
 import { formatBRL } from '../../lib/format';
 import SegmentedControl from '../../components/SegmentedControl';
 import BackHeader from './BackHeader';
+import styles from './TenantPages.module.css';
 
 const PIX_KEY = '00020126580014BR.GOV.BCB.PIX0136a629...5303986BR';
 const BOLETO_LINE = '34191.79001 01043.510047 91020.150008 8 98770000320000';
@@ -38,11 +39,15 @@ export default function PaymentPage() {
   if (!cobranca) {
     return (
       <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <BackHeader title="Pagar aluguel" to="/app" />
+        <div className={styles.mobileOnly}><BackHeader title="Pagar aluguel" to="/app" /></div>
+        <div className={styles.header}><h3 style={{ fontSize: 22, margin: 0 }}>Pagar aluguel</h3></div>
         <p className="text-muted">Nenhuma cobrança em aberto no momento. Você está em dia! 🎉</p>
       </div>
     );
   }
+
+  const encargos = cobranca.encargos ?? [];
+  const aluguelBase = cobranca.valor - encargos.reduce((s, e) => s + e.valor, 0);
 
   function copy(text: string, label: string) {
     navigator.clipboard?.writeText(text).catch(() => {});
@@ -56,81 +61,117 @@ export default function PaymentPage() {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 13 }}>
-      <BackHeader title="Pagar aluguel" to="/app" />
-
-      <div style={{ textAlign: 'center' }}>
-        <div className="text-muted" style={{ fontSize: 12 }}>
-          Aluguel de {competenciaExtenso(cobranca.competencia)} · {cobranca.status === 'atrasado' ? 'venceu em' : 'vence'} {cobranca.vencimento.slice(0, 5)}
-        </div>
-        <div style={{ fontWeight: 800, fontSize: 29, letterSpacing: '-.01em' }}>{formatBRL(cobranca.valor)}</div>
-        <div className="text-muted" style={{ fontSize: 11 }}>{imovel?.endereco}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className={styles.mobileOnly}><BackHeader title="Pagar aluguel" to="/app" /></div>
+      <div className={styles.header} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 0 }}>
+        <h3 style={{ fontSize: 22, margin: 0 }}>Pagar aluguel</h3>
+        <span className="tag st-pend">Aluguel de {competenciaExtenso(cobranca.competencia)}</span>
       </div>
 
-      <SegmentedControl
-        name="pay"
-        value={metodo}
-        onChange={setMetodo}
-        options={[{ value: 'pix', label: 'PIX' }, { value: 'boleto', label: 'Boleto' }]}
-      />
-      <div style={{ alignSelf: 'center' }} />
+      <div className={styles.payGrid}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="card elev-sm" style={{ padding: 20, gap: 14 }}>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Resumo da cobrança</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13.5 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span className="text-muted">Aluguel</span><span>{formatBRL(aluguelBase)}</span></div>
+              {encargos.map((e) => (
+                <div key={e.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">{e.label}</span><span>{formatBRL(e.valor)}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--color-divider)', paddingTop: 9, fontWeight: 700, fontSize: 16 }}>
+                <span>Total</span><span>{formatBRL(cobranca.valor)}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-surface)', borderRadius: 12, padding: '10px 12px', fontSize: 12 }}>
+              <Clock size={15} color="var(--color-accent-700)" strokeWidth={2.5} />
+              {cobranca.status === 'atrasado' ? (
+                <span>Venceu em <strong>{cobranca.vencimento}</strong> · {cobranca.diasEmAtraso} dias em atraso</span>
+              ) : (
+                <span>Vence em <strong>{cobranca.vencimento}</strong> · sem multa até a data</span>
+              )}
+            </div>
+          </div>
 
-      {metodo === 'pix' ? (
-        <>
-          <div style={{ background: '#fff', border: '1px solid var(--color-divider)', borderRadius: 18, padding: 14, alignSelf: 'center', boxShadow: 'var(--shadow-sm)' }}>
-            <PixQr />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-accent-700)', fontWeight: 600 }}>
-            <Clock size={14} strokeWidth={2.5} /> Expira em {formatMMSS(secondsLeft)}
-          </div>
-          <button
-            className="btn btn-secondary btn-block"
-            style={{ minHeight: 44, justifyContent: 'space-between', paddingInline: 16, marginTop: 0 }}
-            onClick={() => copy(PIX_KEY, 'Chave PIX')}
-          >
-            <span style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--color-neutral-600)' }}>
-              00020126…5303986BR
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-accent-700)', flex: 'none', fontWeight: 600 }}>
-              <Copy size={15} strokeWidth={2.5} /> Copiar
-            </span>
-          </button>
-          <div className="text-muted" style={{ fontSize: 11, textAlign: 'center', lineHeight: 1.4 }}>
-            Abra o app do banco → PIX → pague com QR Code ou cole o código. A confirmação é automática.
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ background: 'var(--color-surface)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-accent-2)', display: 'grid', placeItems: 'center', flex: 'none' }}>
-              <Download size={18} color="#fff" strokeWidth={2.5} />
-            </div>
-            <div style={{ lineHeight: 1.3 }}>
-              <div className="text-muted" style={{ fontSize: 12 }}>Vencimento</div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>{cobranca.vencimento}</div>
+          <div className="card elev-sm" style={{ padding: 20, gap: 12 }}>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Forma de pagamento</span>
+            <SegmentedControl
+              name="pay"
+              value={metodo}
+              onChange={setMetodo}
+              options={[{ value: 'pix', label: 'PIX' }, { value: 'boleto', label: 'Boleto' }]}
+            />
+            <div className="text-muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+              {metodo === 'pix'
+                ? <>Escaneie o QR Code no app do seu banco ou copie o código PIX.</>
+                : <>Gere o boleto e pague em qualquer banco ou app.</>} A confirmação do pagamento é{' '}
+              <strong style={{ color: 'var(--color-text)' }}>automática</strong> — você recebe o comprovante na hora.
             </div>
           </div>
+        </div>
+
+        <div className="card elev-sm" style={{ padding: 28, gap: 18, alignItems: 'center', textAlign: 'center' }}>
           <div>
-            <div className="text-muted" style={{ fontSize: 11, marginBottom: 5 }}>Linha digitável</div>
-            <div style={{ background: '#fff', border: '1px solid var(--color-divider)', borderRadius: 12, padding: '11px 12px', fontSize: 11, fontFamily: 'ui-monospace,monospace', letterSpacing: '.02em', lineHeight: 1.5 }}>
-              {BOLETO_LINE}
-            </div>
+            <div className="text-muted" style={{ fontSize: 12 }}>Pague com {metodo === 'pix' ? 'PIX' : 'boleto'}</div>
+            <div style={{ fontWeight: 800, fontSize: 24, letterSpacing: '-.01em' }}>{formatBRL(cobranca.valor)}</div>
+            {imovel && <div className="text-muted" style={{ fontSize: 11 }}>{imovel.endereco}</div>}
           </div>
-          <Barcode />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-secondary" style={{ flex: 1, minHeight: 44 }} onClick={() => showToast('Boleto disponível para download (simulado).')}>
-              <Download size={15} strokeWidth={2.5} /> PDF
-            </button>
-            <button className="btn btn-primary" style={{ flex: 2, minHeight: 44 }} onClick={() => copy(BOLETO_LINE, 'Código do boleto')}>
-              <Copy size={15} strokeWidth={2.5} /> Copiar código
-            </button>
-          </div>
-          <div className="text-muted" style={{ fontSize: 11, textAlign: 'center' }}>Compensação em até 2 dias úteis após o pagamento.</div>
-        </>
-      )}
 
-      <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px dashed var(--color-divider)' }}>
-        <div className="text-muted" style={{ fontSize: 10.5, textAlign: 'center', marginBottom: 8 }}>
+          {metodo === 'pix' ? (
+            <>
+              <div style={{ background: '#fff', border: '1px solid var(--color-divider)', borderRadius: 18, padding: 14, boxShadow: 'var(--shadow-sm)' }}>
+                <PixQr />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-accent-700)', fontWeight: 600 }}>
+                <Clock size={14} strokeWidth={2.5} /> Expira em {formatMMSS(secondsLeft)}
+              </div>
+              <button
+                className="btn btn-secondary btn-block"
+                style={{ minHeight: 44, justifyContent: 'space-between', paddingInline: 16, marginTop: 0, width: '100%' }}
+                onClick={() => copy(PIX_KEY, 'Chave PIX')}
+              >
+                <span style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--color-neutral-600)' }}>
+                  00020126…5303986BR
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-accent-700)', flex: 'none', fontWeight: 600 }}>
+                  <Copy size={15} strokeWidth={2.5} /> Copiar
+                </span>
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ background: 'var(--color-surface)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-accent-2)', display: 'grid', placeItems: 'center', flex: 'none' }}>
+                  <Download size={18} color="#fff" strokeWidth={2.5} />
+                </div>
+                <div style={{ lineHeight: 1.3 }}>
+                  <div className="text-muted" style={{ fontSize: 12 }}>Vencimento</div>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{cobranca.vencimento}</div>
+                </div>
+              </div>
+              <div style={{ width: '100%', textAlign: 'left' }}>
+                <div className="text-muted" style={{ fontSize: 11, marginBottom: 5 }}>Linha digitável</div>
+                <div style={{ background: '#fff', border: '1px solid var(--color-divider)', borderRadius: 12, padding: '11px 12px', fontSize: 11, fontFamily: 'ui-monospace,monospace', letterSpacing: '.02em', lineHeight: 1.5 }}>
+                  {BOLETO_LINE}
+                </div>
+              </div>
+              <Barcode />
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <button className="btn btn-secondary" style={{ flex: 1, minHeight: 44 }} onClick={() => showToast('Boleto disponível para download (simulado).')}>
+                  <Download size={15} strokeWidth={2.5} /> PDF
+                </button>
+                <button className="btn btn-primary" style={{ flex: 2, minHeight: 44 }} onClick={() => copy(BOLETO_LINE, 'Código do boleto')}>
+                  <Copy size={15} strokeWidth={2.5} /> Copiar código
+                </button>
+              </div>
+              <div className="text-muted" style={{ fontSize: 11 }}>Compensação em até 2 dias úteis após o pagamento.</div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div style={{ paddingTop: 4, borderTop: '1px dashed var(--color-divider)' }}>
+        <div className="text-muted" style={{ fontSize: 10.5, textAlign: 'center', margin: '16px 0 8px' }}>
           Ambiente de demonstração — sem integração bancária real
         </div>
         <button className="btn btn-ghost btn-block" style={{ marginTop: 0 }} onClick={simularPagamento}>

@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { useData } from '../../lib/DataContext';
 import { ChamadoStatusTag } from '../../components/StatusTag';
 import BackHeader from './BackHeader';
+import styles from './TenantPages.module.css';
 
 export default function ChamadosListPage() {
   const { currentUser } = useAuth();
@@ -14,7 +15,7 @@ export default function ChamadosListPage() {
   const chamados = chamadosByInquilino(currentUser.id);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 14 }}>
+    <div className={styles.narrowPage} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 20px 24px', gap: 14 }}>
       <BackHeader title="Chamados" to="/app" />
 
       {chamados.length === 0 ? (
